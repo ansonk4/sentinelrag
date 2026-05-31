@@ -2,6 +2,9 @@
 
 This repo contains the code and data for the paper: SentinelRAG: Synthetic Sentinel Knowledge for RAG Database Copyright Protection
 
+<p align="center">
+  <img src="fig/sentinelrag.png" alt="SentinelRAG overview" width="95%">
+</p>
 
 ## Installation
 
