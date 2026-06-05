@@ -1,6 +1,19 @@
 # SentinelRAG: Synthetic Sentinel Knowledge for RAG Database Copyright Protection
 
-This repo contains the code and data for the paper: SentinelRAG: Synthetic Sentinel Knowledge for RAG Database Copyright Protection
+<p align="center">
+  <a href="https://arxiv.org/abs/2606.05787">
+    <img src="https://img.shields.io/badge/arXiv-2606.05787-b31b1b.svg" alt="arXiv">
+  </a>
+  <a href="LICENSE">
+    <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="MIT License">
+  </a>
+</p>
+
+This repo contains the code and data for the paper: [SentinelRAG: Synthetic Sentinel Knowledge for RAG Database Copyright Protection](https://arxiv.org/abs/2606.05787).
+
+## Overview
+
+SentinelRAG is the first RAG database watermarking framework that protects proprietary corpora using style-consistent synthetic knowledge about fictitious entities. Unlike token-level watermarks that can be erased by paraphrasing, or knowledge-level methods that fabricate relations between real entities and risk polluting legitimate responses, SentinelRAG injects isolated sentinel entries that remain invisible to normal user queries but can be reliably triggered through owner-controlled probes. This enables statistically grounded black-box ownership verification with minimal interference to legitimate RAG usage.
 
 <p align="center">
   <img src="fig/sentinelrag.png" alt="SentinelRAG overview" width="95%">
@@ -12,7 +25,7 @@ This repo contains the code and data for the paper: SentinelRAG: Synthetic Senti
 cd sentinelrag
 uv venv
 source .venv/bin/activate
-uv pip install -e ".[dev]"
+uv sync --extra dev
 ```
 
 Create a local `models/` directory before running LLM-backed commands. Each
@@ -24,15 +37,17 @@ cp -R models.example models
 
 Then fill in your model endpoint and API key.
 
-## Main Workflow
+## Quick Start
 
-1. Download or prepare a BEIR-style dataset:
+Run these commands in order.
+
+1. Download a BEIR dataset:
 
 ```bash
 sentinelrag-download-beir nfcorpus
 ```
 
-2. Build the ChromaDB retrieval collection:
+2. Build the retrieval collection:
 
 ```bash
 sentinelrag-build-chroma \
@@ -41,7 +56,7 @@ sentinelrag-build-chroma \
   --score_function cosine
 ```
 
-3. Generate the KO pool:
+3. Generate a KO pool:
 
 ```bash
 sentinelrag-generate-ko-pool \
@@ -52,7 +67,7 @@ sentinelrag-generate-ko-pool \
   --abstract-llm gpt-5-nano
 ```
 
-4. Generate watermark passages and verification questions:
+4. Inject watermark passages:
 
 ```bash
 sentinelrag-inject-watermark \
@@ -61,7 +76,7 @@ sentinelrag-inject-watermark \
   --eval_dataset nfcorpus \
   --eval_model_code contriever \
   --num_select_kos 50 \
-  --llm gpt-5-nano
+  --llm gpt-5-mini
 ```
 
 5. Detect the watermark:
@@ -75,11 +90,6 @@ sentinelrag-detect-watermark \
   --dllm gemini-3.1-flash-lite
 ```
 
-During detection, SentinelRAG checks the target ChromaDB collection for existing
-watermark documents, removes any leftovers from prior runs, injects the
-watermark passages from the selected `injection_result.json`, runs detection,
-and deletes the injected watermark documents after detection finishes.
-
 6. Evaluate interference:
 
 ```bash
@@ -87,22 +97,50 @@ sentinelrag-eval-interference \
   --eval_dataset nfcorpus \
   --num_select_kos 50 \
   --eval_model_code contriever \
-  --num_questions 500 \
+  --num_questions 1000 \
   --llm gpt-5-mini \
   --rllm gpt-5-mini
 ```
 
-Interference evaluation measures behavior changes on normal dataset questions
-than asking watermark-targeted questions. It first checks and cleans the
-ChromaDB collection, samples main-task questions from the dataset, and retrieves
-documents from the clean collection. It then injects the watermark passages from
-`injection_result.json`, retrieves again on the watermarked collection, and
-compares the top-k document IDs to compute retrieval interference. For answer
-interference, it skips answer generation when retrieval is unchanged and no
-watermark appears; otherwise it generates clean and watermarked RAG answers and
-uses the evaluation LLM to judge whether the two answers are semantically
-equivalent. After saving `clean_runs.json`, `watermarked_runs.json`, and
-`interference_results.json`, it removes the injected watermark documents.
+## Workflow Notes
+
+### LLM roles
+
+- KO pool generation: `--abstract-llm` extracts real KOs from sampled documents;
+  `--ko-generation-llm` generates synthetic KOs.
+- Watermark injection: `--llm` expands selected KOs into watermark passages and
+  verification Q&A.
+- Detection: `--rllm` generates RAG answers; `--dllm` verifies answer
+  correctness.
+- Interference evaluation: `--rllm` generates clean and watermarked RAG answers;
+  `--llm` judges whether those answers are semantically equivalent.
+
+### Watermark result selection
+
+Detection and interference automatically use the latest `injection_result.json`
+matching `--eval_dataset` and `--num_select_kos` when `--injection_result_path`
+is omitted. Detection searches under `--basepath`; interference evaluation
+searches under `--output_dir`. Both default to `./output`.
+
+To evaluate a specific watermark run, pass the path directly:
+
+```bash
+--injection_result_path output/watermark_injections/nfcorpus/k50/20260605_120000/injection_result.json
+```
+
+### Detection behavior
+
+During detection, SentinelRAG cleans prior watermark leftovers from the target
+ChromaDB collection, injects passages from the selected `injection_result.json`,
+runs detection, and removes the injected documents afterward.
+
+### Interference behavior
+
+Interference evaluation tests normal dataset questions instead of
+watermark-targeted prompts. It cleans the collection, compares clean and
+watermarked top-k retrieval, only generates answers when retrieval changes or a
+watermark appears, judges answer equivalence with the evaluation LLM, saves the
+run artifacts, and removes injected watermark documents.
 
 ## Utility Commands
 
@@ -124,5 +162,17 @@ sentinelrag/
   docs/                       # migrated workflow notes
 ```
 
-Generated datasets, embeddings, ChromaDB stores, and experiment outputs are
-ignored by default.
+
+## Citation
+
+```bibtex
+@misc{kwok2026sentinelrag,
+      title={SentinelRAG: Synthetic Sentinel Knowledge for RAG Database Copyright Protection},
+      author={Tsun On Kwok and Xi Yang and Ki Sen Hung and Chang Liu and Yangqiu Song},
+      year={2026},
+      eprint={2606.05787},
+      archivePrefix={arXiv},
+      primaryClass={cs.CR},
+      url={https://arxiv.org/abs/2606.05787},
+}
+```
