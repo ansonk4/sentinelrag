@@ -102,7 +102,7 @@ sentinelrag-eval-interference \
   --rllm gpt-5-mini
 ```
 
-## Workflow Notes
+## Pipeline Details
 
 ### LLM roles
 
