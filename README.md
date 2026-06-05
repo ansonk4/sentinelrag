@@ -67,7 +67,7 @@ sentinelrag-generate-ko-pool \
   --abstract-llm gpt-5-nano
 ```
 
-4. Inject watermark passages:
+4. Generate watermark passages and verification questions:
 
 ```bash
 sentinelrag-inject-watermark \
@@ -78,6 +78,8 @@ sentinelrag-inject-watermark \
   --num_select_kos 50 \
   --llm gpt-5-mini
 ```
+
+The `sentinelrag-inject-watermark` command only generates the watermark artifacts by default and does not write to the ChromaDB collection unless `--inject_to_db` is passed.
 
 5. Detect the watermark:
 
@@ -108,8 +110,10 @@ sentinelrag-eval-interference \
 
 - KO pool generation: `--abstract-llm` extracts real KOs from sampled documents;
   `--ko-generation-llm` generates synthetic KOs.
-- Watermark injection: `--llm` expands selected KOs into watermark passages and
-  verification Q&A.
+- Watermark generation: `--llm` expands selected KOs into watermark passages
+  and verification Q&A. The `sentinelrag-inject-watermark` command saves these
+  artifacts by default; it only writes passages to the ChromaDB collection when
+  `--inject_to_db` is passed.
 - Detection: `--rllm` generates RAG answers; `--dllm` verifies answer
   correctness.
 - Interference evaluation: `--rllm` generates clean and watermarked RAG answers;
