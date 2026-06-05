@@ -161,7 +161,6 @@ sentinelrag/
   src/sentinelrag/cli/        # Paper workflow and utility entry points
   src/sentinelrag/utils/      # datasets, embeddings, model registry, IO, stats
   models.example/             # example OpenAI-compatible model preset JSON files
-  docs/                       # migrated workflow notes
 ```
 
 
