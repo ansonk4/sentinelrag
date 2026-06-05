@@ -111,9 +111,7 @@ sentinelrag-eval-interference \
 - KO pool generation: `--abstract-llm` extracts real KOs from sampled documents;
   `--ko-generation-llm` generates synthetic KOs.
 - Watermark generation: `--llm` expands selected KOs into watermark passages
-  and verification Q&A. The `sentinelrag-inject-watermark` command saves these
-  artifacts by default; it only writes passages to the ChromaDB collection when
-  `--inject_to_db` is passed.
+  and verification Q&A.
 - Detection: `--rllm` generates RAG answers; `--dllm` verifies answer
   correctness.
 - Interference evaluation: `--rllm` generates clean and watermarked RAG answers;
